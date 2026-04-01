@@ -145,6 +145,12 @@ function updateStats() {
   document.getElementById('stat-done').textContent = done;
   document.getElementById('stat-total').textContent = topics.length;
   document.getElementById('stat-streak').textContent = calcStreak();
+  const streakChip = document.getElementById('chip-streak');
+  if (calcStreak() > 0) {
+    streakChip.classList.add('streak-active');
+  } else {
+    streakChip.classList.remove('streak-active');
+  }
 }
 
 // ─── STREAK CALCULATION ──────────────────────────────────
