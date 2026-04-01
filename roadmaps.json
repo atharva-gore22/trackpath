@@ -1,0 +1,47 @@
+{
+  "webdev": {
+    "label": "Web Development",
+    "topics": [
+      { "id": "html-basics",     "title": "HTML Basics",          "category": "HTML",       "hours": 3 },
+      { "id": "html-forms",      "title": "HTML Forms & Inputs",  "category": "HTML",       "hours": 2 },
+      { "id": "css-basics",      "title": "CSS Basics",           "category": "CSS",        "hours": 3 },
+      { "id": "css-flexbox",     "title": "Flexbox",              "category": "CSS",        "hours": 4 },
+      { "id": "css-grid",        "title": "CSS Grid",             "category": "CSS",        "hours": 3 },
+      { "id": "css-responsive",  "title": "Responsive Design",    "category": "CSS",        "hours": 3 },
+      { "id": "js-basics",       "title": "JS Basics",            "category": "JavaScript", "hours": 5 },
+      { "id": "js-dom",          "title": "JS DOM Manipulation",  "category": "JavaScript", "hours": 4 },
+      { "id": "js-events",       "title": "JS Events",            "category": "JavaScript", "hours": 3 },
+      { "id": "js-fetch",        "title": "Fetch & APIs",         "category": "JavaScript", "hours": 4 },
+      { "id": "js-localstorage", "title": "localStorage",         "category": "JavaScript", "hours": 2 },
+      { "id": "git-basics",      "title": "Git & GitHub",         "category": "Tools",      "hours": 3 }
+    ]
+  },
+  "dsa": {
+    "label": "DSA with JavaScript",
+    "topics": [
+      { "id": "arrays",        "title": "Arrays",               "category": "Basics",      "hours": 4 },
+      { "id": "strings",       "title": "Strings",              "category": "Basics",      "hours": 3 },
+      { "id": "objects-maps",  "title": "Objects & Maps",       "category": "Basics",      "hours": 3 },
+      { "id": "recursion",     "title": "Recursion",            "category": "Concepts",    "hours": 5 },
+      { "id": "big-o",         "title": "Big O Notation",       "category": "Concepts",    "hours": 3 },
+      { "id": "linked-list",   "title": "Linked Lists",         "category": "Structures",  "hours": 5 },
+      { "id": "stacks-queues", "title": "Stacks & Queues",      "category": "Structures",  "hours": 4 },
+      { "id": "trees",         "title": "Trees & BST",          "category": "Structures",  "hours": 6 },
+      { "id": "sorting",       "title": "Sorting Algorithms",   "category": "Algorithms",  "hours": 5 },
+      { "id": "searching",     "title": "Searching Algorithms", "category": "Algorithms",  "hours": 4 }
+    ]
+  },
+  "python": {
+    "label": "Python Basics",
+    "topics": [
+      { "id": "py-syntax",      "title": "Syntax & Variables",   "category": "Core",       "hours": 2 },
+      { "id": "py-loops",       "title": "Loops & Conditions",   "category": "Core",       "hours": 3 },
+      { "id": "py-functions",   "title": "Functions",            "category": "Core",       "hours": 3 },
+      { "id": "py-lists",       "title": "Lists & Tuples",       "category": "Data",       "hours": 3 },
+      { "id": "py-dicts",       "title": "Dictionaries & Sets",  "category": "Data",       "hours": 3 },
+      { "id": "py-oop",         "title": "OOP Basics",           "category": "Concepts",   "hours": 5 },
+      { "id": "py-files",       "title": "File Handling",        "category": "Concepts",   "hours": 2 },
+      { "id": "py-libraries",   "title": "Using Libraries",      "category": "Ecosystem",  "hours": 2 }
+    ]
+  }
+}

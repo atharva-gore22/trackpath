@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TrackPath</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <span class="logo">TrackPath</span>
+
+    <select id="skill-select">
+      <option value="">— Pick a skill —</option>
+      <option value="webdev">Web Development</option>
+      <option value="dsa">DSA with JavaScript</option>
+      <option value="python">Python Basics</option>
+    </select>
+
+    <div class="stats-bar" id="stats-bar">
+      <span id="stat-done">0</span>/<span id="stat-total">0</span> topics
+      &nbsp;|&nbsp; 🔥 <span id="stat-streak">0</span> day streak
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <main class="layout">
+
+    <!-- LEFT: ROADMAP -->
+    <section class="roadmap-section">
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <span class="progress-label" id="progress-label">0%</span>
+      </div>
+
+      <div id="roadmap-container">
+        <!-- Topic cards render here via JS -->
+        <div class="empty-state">Select a skill above to get started.</div>
+      </div>
+    </section>
+
+    <!-- RIGHT: AI PANEL -->
+    <aside class="ai-panel">
+      <h2 class="panel-title">AI Recommendations</h2>
+
+      <button class="btn-primary" id="btn-recommend">
+        What should I learn next? ✦
+      </button>
+
+      <div id="ai-output" class="ai-output">
+        <p class="ai-placeholder">Your personalized recommendation will appear here.</p>
+      </div>
+    </aside>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
