@@ -1,23 +1,47 @@
-// ─── STATE ──────────────────────────────────────────────
-// These variables hold everything the app needs to know right now.
-// 'roadmaps' will hold all data loaded from roadmaps.json
-// 'currentSkill' tracks which skill the user has selected
-// 'progress' is an object like { "html-basics": 1704067200000 }
-//   (topic id → timestamp of when it was checked)
+import { auth, db } from './firebase.js';
+import {
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+// ─── STATE ───────────────────────────────────────────────
 let roadmaps = {};
 let currentSkill = null;
 let progress = {};
+let currentUser = null;
 
-// ─── INIT ────────────────────────────────────────────────
-// This runs once when the page loads.
-// It loads roadmaps.json, restores saved progress, and sets up the dropdown.
+// ─── AUTH GATE ───────────────────────────────────────────
+// If not logged in, send back to login page
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    window.location.href = 'index.html';
+    return;
+  }
+  currentUser = user;
+  document.getElementById('user-name').textContent =
+    user.displayName || user.email.split('@')[0];
 
-async function init() {
+  // Load roadmaps then load this user's progress from Firestore
+  await loadRoadmaps();
+  await loadProgress();
+});
+
+// ─── SIGN OUT ────────────────────────────────────────────
+window.signOutUser = async function() {
+  await signOut(auth);
+  window.location.href = 'index.html';
+};
+
+// ─── LOAD ROADMAPS ───────────────────────────────────────
+async function loadRoadmaps() {
   const res = await fetch('roadmaps.json');
   roadmaps = await res.json();
-
-  progress = JSON.parse(localStorage.getItem('tp_progress') || '{}');
 
   document.getElementById('skill-select').addEventListener('change', e => {
     currentSkill = e.target.value || null;
@@ -28,10 +52,30 @@ async function init() {
   document.getElementById('btn-recommend').addEventListener('click', getRecommendation);
 }
 
-// ─── RENDER ROADMAP ──────────────────────────────────────
-// Builds the topic cards for the selected skill.
-// Groups topics by their 'category' field.
+// ─── LOAD PROGRESS FROM FIRESTORE ────────────────────────
+// Each user has a document in the 'progress' collection
+// Document ID = user's UID
+// Structure: { topicId: timestamp, topicId: timestamp, ... }
 
+async function loadProgress() {
+  const ref = doc(db, 'progress', currentUser.uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    progress = snap.data();
+  } else {
+    // First time user — create their document
+    await setDoc(ref, {});
+    progress = {};
+  }
+}
+
+// ─── SAVE PROGRESS TO FIRESTORE ──────────────────────────
+async function saveProgress() {
+  const ref = doc(db, 'progress', currentUser.uid);
+  await updateDoc(ref, progress);
+}
+
+// ─── RENDER ROADMAP ──────────────────────────────────────
 function renderRoadmap() {
   const container = document.getElementById('roadmap-container');
 
@@ -41,18 +85,15 @@ function renderRoadmap() {
     return;
   }
 
-  const skill = roadmaps[currentSkill];
+  const skill  = roadmaps[currentSkill];
   const topics = skill.topics;
 
-  // Group topics by category
-  // Result looks like: { "HTML": [...topics], "CSS": [...topics], ... }
   const groups = {};
   topics.forEach(topic => {
     if (!groups[topic.category]) groups[topic.category] = [];
     groups[topic.category].push(topic);
   });
 
-  // Build HTML for each group
   let html = '';
   for (const [category, items] of Object.entries(groups)) {
     html += `<div class="category-group">`;
@@ -66,16 +107,13 @@ function renderRoadmap() {
 
   container.innerHTML = html;
 
-  // Attach click handlers to every card
   container.querySelectorAll('.topic-card').forEach(card => {
     card.addEventListener('click', e => {
-      // Don't toggle if user clicked a button inside the card
       if (e.target.closest('.btn-sm')) return;
       toggleTopic(card.dataset.id);
     });
   });
 
-  // Attach explain/quiz button handlers
   container.querySelectorAll('.btn-explain').forEach(btn => {
     btn.addEventListener('click', () => explainTopic(btn.dataset.id));
   });
@@ -91,9 +129,6 @@ function renderRoadmap() {
 }
 
 // ─── BUILD TOPIC CARD ────────────────────────────────────
-// Returns the HTML string for one topic card.
-// We use data-id to identify which topic was clicked.
-
 function buildTopicCard(topic, isDone) {
   return `
     <div class="topic-card ${isDone ? 'done' : ''}" data-id="${topic.id}">
@@ -111,22 +146,22 @@ function buildTopicCard(topic, isDone) {
 }
 
 // ─── TOGGLE TOPIC ────────────────────────────────────────
-// Marks a topic as done or undone, saves to localStorage.
-
-function toggleTopic(topicId) {
+async function toggleTopic(topicId) {
   if (progress[topicId]) {
-    delete progress[topicId];       // Uncheck: remove from progress
+    delete progress[topicId];
   } else {
-    progress[topicId] = Date.now(); // Check: store current timestamp
+    progress[topicId] = Date.now();
   }
 
-  localStorage.setItem('tp_progress', JSON.stringify(progress));
+  // Save to Firestore immediately
+  const ref = doc(db, 'progress', currentUser.uid);
+  await setDoc(ref, progress);
+
   renderRoadmap();
   updateStats();
 }
 
 // ─── PROGRESS BAR ────────────────────────────────────────
-
 function updateProgress(done, total) {
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
   document.getElementById('progress-fill').style.width = pct + '%';
@@ -134,17 +169,16 @@ function updateProgress(done, total) {
 }
 
 // ─── STATS BAR ───────────────────────────────────────────
-// Updates the top bar: topics done and streak count.
-
 function updateStats() {
   if (!currentSkill) return;
 
   const topics = roadmaps[currentSkill].topics;
-  const done = topics.filter(t => progress[t.id]).length;
+  const done   = topics.filter(t => progress[t.id]).length;
 
   document.getElementById('stat-done').textContent = done;
   document.getElementById('stat-total').textContent = topics.length;
   document.getElementById('stat-streak').textContent = calcStreak();
+
   const streakChip = document.getElementById('chip-streak');
   if (calcStreak() > 0) {
     streakChip.classList.add('streak-active');
@@ -153,15 +187,11 @@ function updateStats() {
   }
 }
 
-// ─── STREAK CALCULATION ──────────────────────────────────
-// Counts how many consecutive days the user checked at least one topic.
-// Uses the timestamps stored in progress.
-
+// ─── STREAK ──────────────────────────────────────────────
 function calcStreak() {
-  const timestamps = Object.values(progress);
+  const timestamps = Object.values(progress).filter(v => typeof v === 'number');
   if (timestamps.length === 0) return 0;
 
-  // Get unique dates (as "YYYY-MM-DD" strings) sorted newest first
   const dates = [...new Set(
     timestamps.map(ts => new Date(ts).toDateString())
   )].sort((a, b) => new Date(b) - new Date(a));
@@ -174,7 +204,7 @@ function calcStreak() {
     const d = new Date(dateStr);
     d.setHours(0, 0, 0, 0);
     const diff = (expected - d) / (1000 * 60 * 60 * 24);
-    if (diff > 1) break;       // Gap found — streak ends
+    if (diff > 1) break;
     streak++;
     expected = d;
   }
@@ -182,9 +212,7 @@ function calcStreak() {
   return streak;
 }
 
-// ─── AI OUTPUT HELPERS ───────────────────────────────────
-// Sets the AI panel to a loading state or renders a response.
-
+// ─── AI HELPERS ──────────────────────────────────────────
 function setAILoading(msg = 'Thinking') {
   document.getElementById('ai-output').innerHTML =
     `<p style="color:var(--muted)"><span class="loading-dot">${msg}</span></p>`;
@@ -196,7 +224,6 @@ function setAIOutput(html) {
   document.getElementById('btn-recommend').disabled = false;
 }
 
-// Converts **bold** markdown to <strong> tags
 function formatText(text) {
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -204,10 +231,6 @@ function formatText(text) {
 }
 
 // ─── GET RECOMMENDATION ──────────────────────────────────
-// THE MAIN AI FEATURE.
-// Sends the user's progress to the Cloudflare Worker,
-// which adds the API key and calls Groq.
-
 async function getRecommendation() {
   if (!currentSkill) {
     setAIOutput('<p style="color:var(--muted)">Please select a skill first.</p>');
@@ -215,16 +238,14 @@ async function getRecommendation() {
   }
 
   const topics = roadmaps[currentSkill].topics;
-  const done  = topics.filter(t =>  progress[t.id]).map(t => t.title);
-  const todo  = topics.filter(t => !progress[t.id]).map(t => t.title);
+  const done   = topics.filter(t =>  progress[t.id]).map(t => t.title);
+  const todo   = topics.filter(t => !progress[t.id]).map(t => t.title);
 
   const prompt = `
 You are a learning advisor. The user is studying "${roadmaps[currentSkill].label}".
-
 Completed topics: ${done.length > 0 ? done.join(', ') : 'None yet'}.
 Remaining topics: ${todo.join(', ')}.
-
-Based on their progress, recommend the best 2 topics to tackle next.
+Recommend the best 2 topics to tackle next.
 For each topic, write 2 sentences: why it's the right next step, and one tip to learn it effectively.
 Keep it practical and encouraging. Use **bold** for topic names.
   `.trim();
@@ -237,7 +258,6 @@ Keep it practical and encouraging. Use **bold** for topic names.
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
-
     const data = await res.json();
     setAIOutput(`<p>${formatText(data.reply)}</p>`);
   } catch (err) {
@@ -246,15 +266,13 @@ Keep it practical and encouraging. Use **bold** for topic names.
 }
 
 // ─── EXPLAIN TOPIC ───────────────────────────────────────
-// Sends a topic name to the AI and asks for a plain explanation.
-
 async function explainTopic(topicId) {
   const topic = findTopic(topicId);
   if (!topic) return;
 
   const prompt = `
-Explain "${topic.title}" to a beginner software developer in 4–5 sentences.
-Cover: what it is, why it matters, and one real-world example of where it's used.
+Explain "${topic.title}" to a beginner software developer in 4-5 sentences.
+Cover: what it is, why it matters, and one real-world example.
 Use **bold** for key terms.
   `.trim();
 
@@ -266,7 +284,6 @@ Use **bold** for key terms.
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
-
     const data = await res.json();
     setAIOutput(`<p><strong>${topic.title}</strong><br><br>${formatText(data.reply)}</p>`);
   } catch (err) {
@@ -275,15 +292,13 @@ Use **bold** for key terms.
 }
 
 // ─── QUIZ TOPIC ──────────────────────────────────────────
-// Asks the AI for 3 MCQs on a topic and renders them as clickable options.
-
 async function quizTopic(topicId) {
   const topic = findTopic(topicId);
   if (!topic) return;
 
   const prompt = `
 Generate exactly 3 multiple choice questions about "${topic.title}" for a beginner developer.
-
+Make the questions different every time — vary the difficulty and angle.
 Respond in this exact JSON format (no extra text, no markdown):
 [
   {
@@ -302,13 +317,9 @@ Respond in this exact JSON format (no extra text, no markdown):
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
-
     const data = await res.json();
-
-    // Strip any markdown code fences the AI might add
     const clean = data.reply.replace(/```json|```/g, '').trim();
     const questions = JSON.parse(clean);
-
     renderQuiz(topic.title, questions);
   } catch (err) {
     setAIOutput('<p style="color:#f87171">Couldn\'t generate quiz. Try again.</p>');
@@ -316,11 +327,8 @@ Respond in this exact JSON format (no extra text, no markdown):
 }
 
 // ─── RENDER QUIZ ─────────────────────────────────────────
-// Takes the parsed quiz questions and builds interactive HTML.
-
 function renderQuiz(title, questions) {
   let html = `<p style="font-weight:600;margin-bottom:12px">Quiz: ${title}</p>`;
-
   questions.forEach((q, i) => {
     html += `<div style="margin-bottom:14px">`;
     html += `<p style="font-size:13px;margin-bottom:8px"><strong>Q${i+1}:</strong> ${q.q}</p>`;
@@ -329,38 +337,27 @@ function renderQuiz(title, questions) {
         <button class="btn-sm quiz-opt"
           style="display:block;width:100%;text-align:left;margin-bottom:5px"
           data-correct="${opt === q.answer}"
-          onclick="checkAnswer(this, '${q.answer}')">
+          onclick="checkAnswer(this)">
           ${opt}
         </button>
       `;
     });
     html += `</div>`;
   });
-
   setAIOutput(html);
 }
 
 // ─── CHECK ANSWER ────────────────────────────────────────
-// Called when user clicks a quiz option. Shows correct/wrong feedback.
-
-function checkAnswer(btn, correct) {
+window.checkAnswer = function(btn) {
   const isRight = btn.dataset.correct === 'true';
-  btn.style.background    = isRight ? '#1a3d2b' : '#3d1a1a';
-  btn.style.borderColor   = isRight ? 'var(--green)' : '#f87171';
-  btn.style.color         = isRight ? 'var(--green)' : '#f87171';
-
-  // Disable all sibling options for this question
-  btn.closest('div').querySelectorAll('.quiz-opt').forEach(b => {
-    b.disabled = true;
-  });
-}
+  btn.style.background  = isRight ? '#1a3d2b' : '#3d1a1a';
+  btn.style.borderColor = isRight ? 'var(--green)' : '#f87171';
+  btn.style.color       = isRight ? 'var(--green)' : '#f87171';
+  btn.closest('div').querySelectorAll('.quiz-opt').forEach(b => b.disabled = true);
+};
 
 // ─── HELPER ──────────────────────────────────────────────
-
 function findTopic(id) {
   if (!currentSkill) return null;
   return roadmaps[currentSkill].topics.find(t => t.id === id);
 }
-
-// ─── START ───────────────────────────────────────────────
-init();
