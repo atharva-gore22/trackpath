@@ -50,6 +50,16 @@ async function loadRoadmaps() {
   });
 
   document.getElementById('btn-recommend').addEventListener('click', getRecommendation);
+  // Auto-select skill if coming from dashboard
+  const params = new URLSearchParams(window.location.search);
+  const skillFromUrl = params.get('skill');
+  if (skillFromUrl && roadmaps[skillFromUrl]) {
+    currentSkill = skillFromUrl;
+    document.getElementById('skill-select').value = skillFromUrl;
+    renderRoadmap();
+    updateStats();
+  }
+
 }
 
 // ─── LOAD PROGRESS FROM FIRESTORE ────────────────────────

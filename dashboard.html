@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TrackPath — Dashboard</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <a class="logo" href="dashboard.html">
+      <div class="logo-icon"></div>
+      <span class="logo-text">
+        <span class="track">Track</span><span class="path">Path</span>
+      </span>
+    </a>
+
+    <nav class="topnav">
+      <a class="topnav-link active" href="dashboard.html">Dashboard</a>
+      <a class="topnav-link" href="app.html">Roadmap</a>
+    </nav>
+
+    <div class="stats-bar">
+      <div class="stat-chip" id="chip-streak">
+        <span class="icon">🔥</span>
+        <span class="stat-value" id="nav-streak">0</span>
+        <span style="color:var(--muted)">day streak</span>
+      </div>
+      <div class="stat-chip" id="chip-user" style="cursor:pointer" onclick="signOutUser()">
+        <span class="icon">👤</span>
+        <span class="stat-value" id="user-name">...</span>
+        <span style="color:var(--muted)">· Sign out</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- DASHBOARD BODY -->
+  <main class="dash-layout">
+
+    <!-- HERO ROW -->
+    <section class="dash-hero">
+      <div class="dash-avatar" id="dash-avatar">A</div>
+      <div class="dash-welcome">
+        <h1 class="dash-greeting" id="dash-greeting">Welcome back!</h1>
+        <p class="dash-sub" id="dash-sub">Keep the momentum going.</p>
+      </div>
+      <div class="dash-xp-badge">
+        <span class="xp-label">Total XP</span>
+        <span class="xp-value" id="dash-xp">0</span>
+      </div>
+    </section>
+
+    <!-- STAT CARDS ROW -->
+    <section class="dash-stats">
+      <div class="dash-stat-card">
+        <span class="dsc-icon">✅</span>
+        <span class="dsc-value" id="stat-total-done">0</span>
+        <span class="dsc-label">Topics completed</span>
+      </div>
+      <div class="dash-stat-card">
+        <span class="dsc-icon">🔥</span>
+        <span class="dsc-value" id="stat-streak">0</span>
+        <span class="dsc-label">Day streak</span>
+      </div>
+      <div class="dash-stat-card">
+        <span class="dsc-icon">⏱️</span>
+        <span class="dsc-value" id="stat-hours">0h</span>
+        <span class="dsc-label">Hours invested</span>
+      </div>
+      <div class="dash-stat-card">
+        <span class="dsc-icon">⚡</span>
+        <span class="dsc-value" id="stat-xp">0</span>
+        <span class="dsc-label">XP earned</span>
+      </div>
+    </section>
+
+    <!-- SKILL PROGRESS -->
+    <section class="dash-section">
+      <h2 class="dash-section-title">Skill Progress</h2>
+      <div class="skill-cards" id="skill-cards">
+        <!-- rendered by JS -->
+      </div>
+    </section>
+
+    <!-- RECENT ACTIVITY -->
+    <section class="dash-section">
+      <h2 class="dash-section-title">Recent Activity</h2>
+      <div class="activity-list" id="activity-list">
+        <!-- rendered by JS -->
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

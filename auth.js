@@ -54,7 +54,7 @@ document.getElementById('btn-email-auth').addEventListener('click', async () => 
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(cred.user, { displayName: name });
     }
-    window.location.href = 'app.html';
+window.location.href = 'dashboard.html';
   } catch (err) {
     setLoading(false);
     showError(friendlyError(err.code));
@@ -67,7 +67,7 @@ document.getElementById('btn-google').addEventListener('click', async () => {
   try {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
-    window.location.href = 'app.html';
+window.location.href = 'dashboard.html';
   } catch (err) {
     setLoading(false);
     showError(friendlyError(err.code));
