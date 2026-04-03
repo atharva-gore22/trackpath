@@ -1325,3 +1325,15 @@ body {
   align-items: center;
   justify-content: space-between;
 }
+.ai-output .btn-sm {
+  white-space: normal;
+  word-break: break-word;
+  height: auto;
+}
+
+.quiz-opt {
+  white-space: normal !important;
+  word-break: break-word !important;
+  height: auto !important;
+  line-height: 1.5 !important;
+}

@@ -375,6 +375,7 @@ Respond in this exact JSON format (no extra text, no markdown):
     setAIOutput('<p style="color:#f87171">Couldn\'t generate quiz. Try again.</p>');
   }
 }
+window.quizTopic = quizTopic;
 
 // ─── RENDER QUIZ ─────────────────────────────────────────
 function renderQuiz(title, topicId, questions) {
