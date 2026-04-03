@@ -327,15 +327,33 @@ async function quizTopic(topicId) {
   const topic = findTopic(topicId);
   if (!topic) return;
 
+  // Random seed makes AI generate different questions every time
+  const seed = Math.floor(Math.random() * 10000);
+  const angles = [
+    'Focus on a common beginner misconception.',
+    'Focus on a practical real-world use case.',
+    'Focus on how it compares to a related concept.',
+    'Focus on syntax or implementation details.',
+    'Focus on why it matters and what problem it solves.',
+    'Focus on edge cases or gotchas.',
+    'Focus on best practices.',
+  ];
+  const angle = angles[Math.floor(Math.random() * angles.length)];
+
   const prompt = `
 Generate exactly 3 multiple choice questions about "${topic.title}" for a beginner developer.
-Make the questions different every time — vary the difficulty and angle.
+Seed: ${seed}
+Angle: ${angle}
+Make all 3 questions different from each other.
+Vary the difficulty — one easy, one medium, one harder.
+Never use generic questions like "What is ${topic.title}?".
+
 Respond in this exact JSON format (no extra text, no markdown):
 [
   {
     "q": "Question here?",
-    "options": ["A", "B", "C", "D"],
-    "answer": "A"
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "answer": "Option A"
   }
 ]
   `.trim();
@@ -348,25 +366,37 @@ Respond in this exact JSON format (no extra text, no markdown):
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt })
     });
+
     const data = await res.json();
     const clean = data.reply.replace(/```json|```/g, '').trim();
     const questions = JSON.parse(clean);
-    renderQuiz(topic.title, questions);
+    renderQuiz(topic.title, topicId, questions);
   } catch (err) {
     setAIOutput('<p style="color:#f87171">Couldn\'t generate quiz. Try again.</p>');
   }
 }
 
 // ─── RENDER QUIZ ─────────────────────────────────────────
-function renderQuiz(title, questions) {
-  let html = `<p style="font-weight:600;margin-bottom:12px">Quiz: ${title}</p>`;
+function renderQuiz(title, topicId, questions) {
+  let html = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <p style="font-weight:600;font-size:13px">Quiz: ${title}</p>
+      <button class="btn-sm" onclick="quizTopic('${topicId}')"
+        style="font-size:11px;padding:4px 10px">
+        🔀 New Quiz
+      </button>
+    </div>
+  `;
+
   questions.forEach((q, i) => {
-    html += `<div style="margin-bottom:14px">`;
-    html += `<p style="font-size:13px;margin-bottom:8px"><strong>Q${i+1}:</strong> ${q.q}</p>`;
+    html += `<div style="margin-bottom:16px">`;
+    html += `<p style="font-size:13px;margin-bottom:8px;line-height:1.5">
+               <strong style="color:var(--cyan)">Q${i+1}:</strong> ${q.q}
+             </p>`;
     q.options.forEach(opt => {
       html += `
         <button class="btn-sm quiz-opt"
-          style="display:block;width:100%;text-align:left;margin-bottom:5px"
+          style="display:block;width:100%;text-align:left;margin-bottom:6px;line-height:1.5"
           data-correct="${opt === q.answer}"
           onclick="checkAnswer(this)">
           ${opt}
@@ -375,6 +405,7 @@ function renderQuiz(title, questions) {
     });
     html += `</div>`;
   });
+
   setAIOutput(html);
 }
 
