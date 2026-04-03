@@ -8,7 +8,6 @@
 </head>
 <body>
 
-  <!-- TOP BAR -->
   <header class="topbar">
     <a class="logo" href="dashboard.html">
       <div class="logo-icon"></div>
@@ -36,10 +35,8 @@
     </div>
   </header>
 
-  <!-- DASHBOARD BODY -->
   <main class="dash-layout">
 
-    <!-- HERO ROW -->
     <section class="dash-hero">
       <div class="dash-avatar" id="dash-avatar">A</div>
       <div class="dash-welcome">
@@ -52,7 +49,6 @@
       </div>
     </section>
 
-    <!-- STAT CARDS ROW -->
     <section class="dash-stats">
       <div class="dash-stat-card">
         <span class="dsc-icon">✅</span>
@@ -76,23 +72,59 @@
       </div>
     </section>
 
-    <!-- SKILL PROGRESS -->
     <section class="dash-section">
-      <h2 class="dash-section-title">Skill Progress</h2>
-      <div class="skill-cards" id="skill-cards">
-        <!-- rendered by JS -->
+      <div class="dash-section-header">
+        <h2 class="dash-section-title">Skill Progress</h2>
       </div>
+      <div class="skill-cards" id="skill-cards"></div>
     </section>
 
-    <!-- RECENT ACTIVITY -->
     <section class="dash-section">
       <h2 class="dash-section-title">Recent Activity</h2>
-      <div class="activity-list" id="activity-list">
-        <!-- rendered by JS -->
-      </div>
+      <div class="activity-list" id="activity-list"></div>
     </section>
 
   </main>
+
+  <!-- ADD SKILL MODAL -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Add a Custom Skill</h2>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <p class="modal-desc">
+        Type any skill you want to learn. AI will generate a complete roadmap for you.
+      </p>
+      <input
+        type="text"
+        class="auth-input"
+        id="custom-skill-input"
+        placeholder="e.g. Machine Learning, UI/UX Design, Docker..."
+      />
+      <div class="modal-examples">
+        <span class="modal-example-label">Try:</span>
+        <button class="example-chip" onclick="setExample('Machine Learning')">Machine Learning</button>
+        <button class="example-chip" onclick="setExample('React.js')">React.js</button>
+        <button class="example-chip" onclick="setExample('System Design')">System Design</button>
+        <button class="example-chip" onclick="setExample('Docker & DevOps')">Docker & DevOps</button>
+      </div>
+      <div class="modal-error" id="modal-error"></div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="modal-cancel">Cancel</button>
+        <button class="btn-primary modal-btn" id="btn-generate">✦ Generate Roadmap</button>
+      </div>
+      <div class="gen-status" id="gen-status" style="display:none">
+        <div class="gen-spinner"></div>
+        <span id="gen-status-text">Generating your roadmap...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING ADD BUTTON -->
+  <button class="fab" id="btn-add-skill" onclick="openModal()">
+    + Add Skill
+  </button>
 
   <script type="module" src="dashboard.js"></script>
 </body>

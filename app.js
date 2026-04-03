@@ -40,22 +40,43 @@ window.signOutUser = async function() {
 
 // ─── LOAD ROADMAPS ───────────────────────────────────────
 async function loadRoadmaps() {
-  const res = await fetch('roadmaps.json');
+  const [res, customSnap] = await Promise.all([
+    fetch('roadmaps.json'),
+    getDoc(doc(db, 'customRoadmaps', currentUser.uid))
+  ]);
+
   roadmaps = await res.json();
 
-  document.getElementById('skill-select').addEventListener('change', e => {
+  // Merge custom roadmaps into roadmaps
+  if (customSnap.exists()) {
+    Object.assign(roadmaps, customSnap.data());
+  }
+
+  // Add custom skills to the dropdown
+  const select = document.getElementById('skill-select');
+  if (customSnap.exists()) {
+    const customs = customSnap.data();
+    Object.entries(customs).forEach(([key, skill]) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = skill.label + ' ✦';
+      select.appendChild(opt);
+    });
+  }
+
+  select.addEventListener('change', e => {
     currentSkill = e.target.value || null;
     renderRoadmap();
     updateStats();
   });
 
   document.getElementById('btn-recommend').addEventListener('click', getRecommendation);
-  // Auto-select skill if coming from dashboard
+
   const params = new URLSearchParams(window.location.search);
   const skillFromUrl = params.get('skill');
   if (skillFromUrl && roadmaps[skillFromUrl]) {
     currentSkill = skillFromUrl;
-    document.getElementById('skill-select').value = skillFromUrl;
+    select.value = skillFromUrl;
     renderRoadmap();
     updateStats();
   }
